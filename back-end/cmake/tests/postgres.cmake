@@ -8,3 +8,7 @@ virtual_planner_add_test(
   postgres_goal_repository_test
   integration/postgres/postgres_goal_repository_test.cpp
 )
+virtual_planner_add_test(
+  postgres_reminder_repository_test
+  integration/postgres/postgres_reminder_repository_test.cpp
+)

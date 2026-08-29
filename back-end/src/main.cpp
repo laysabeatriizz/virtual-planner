@@ -14,6 +14,7 @@
 #if defined(VIRTUAL_PLANNER_WITH_HTTP)
 #include "virtual_planner/api/http/api_server.hpp"
 #include "virtual_planner/api/http/routes/reporting_routes.hpp"
+#include "virtual_planner/api/http/routes/reminder_routes.hpp"
 #include "virtual_planner/api/http/server_config.hpp"
 #include "virtual_planner/api/http/routes/goal_routes.hpp"
 #endif
@@ -111,6 +112,7 @@ int main() {
         config, repositories, health_database, logger, server_config);
 
     virtual_planner::api::http::register_reporting_routes(server);
+    virtual_planner::api::http::register_reminder_routes(server);
     virtual_planner::api::http::register_goal_routes(server);
 
     const int port = server.bind(server_config);

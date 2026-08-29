@@ -16,7 +16,7 @@ const nlohmann::json& required_field(const nlohmann::json& value,
     if (!value.contains(field))
     {
         throw std::invalid_argument(
-            std::string{"Reminder exige o campo \""} + field + "\".");
+            std::string{"Reminder requires the field \""} + field + "\".");
     }
 
     return value.at(field);
@@ -29,7 +29,7 @@ std::uint64_t read_id(const nlohmann::json& value)
     if (!id.is_number_unsigned())
     {
         throw std::invalid_argument(
-            "O campo \"id\" de Reminder deve ser um inteiro sem sinal.");
+            "Reminder field \"id\" must be an unsigned integer.");
     }
 
     return id.get<std::uint64_t>();
@@ -42,7 +42,7 @@ std::string read_description(const nlohmann::json& value)
     if (!description.is_string())
     {
         throw std::invalid_argument(
-            "O campo \"description\" de Reminder deve ser uma string.");
+            "Reminder field \"description\" must be a string.");
     }
 
     return description.get<std::string>();
@@ -67,7 +67,7 @@ domain::Reminder reminder_from_json(const nlohmann::json& value)
 {
     if (!value.is_object())
     {
-        throw std::invalid_argument("Reminder deve ser um objeto JSON.");
+        throw std::invalid_argument("Reminder must be a JSON object.");
     }
 
     return domain::Reminder{

@@ -620,6 +620,21 @@ existe somente na resposta e não é persistido.
 Parâmetros ausentes, datas inválidas, janela invertida ou enums desconhecidos
 respondem 400 com `code = "validation_error"`, conforme a seção de erros.
 
+## `GET /api/reminders/:id`
+
+Retorna **a regra** do lembrete, e não uma ocorrência expandida — é o que a
+tela de edição precisa carregar. A listagem acima expande um recorrente em
+várias ocorrências dentro da janela; aqui a resposta é a entidade em si, com
+`recurrence` e a `date`-âncora.
+
+```http
+GET /api/reminders/42
+```
+
+Responde **200** com a representação JSON de `Reminder`. Um identificador que
+não existe responde **404** com `code = "not_found"`; um que não seja numérico
+responde **400** com `code = "validation_error"`.
+
 ## `POST /api/reminders`
 
 Cria um Reminder por meio de `CreateReminderUseCase`. O cliente envia os seis

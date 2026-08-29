@@ -1,5 +1,7 @@
 #include "virtual_planner/api/http/routes/reminder_routes.hpp"
 
+#include "virtual_planner/shared/errors.hpp"
+
 #include "virtual_planner/api/http/api_server.hpp"
 #include "virtual_planner/api/json/reminder_json.hpp"
 #include "virtual_planner/api/json/shared_json.hpp"
@@ -195,6 +197,23 @@ void register_reminder_routes(ApiServer& api)
 
     const char* const reminder_by_id =
         R"(/api/reminders(?:/([^/]*))?)";
+
+    api.server().Get(
+        reminder_by_id,
+        [reminders](const httplib::Request& request,
+                    httplib::Response& response) {
+            auto& repository = require_repository(reminders);
+            const auto reminder = repository.find_by_id(path_id_from(request));
+
+            // Diferente de find_created_or_updated: aqui o id vem do usuario,
+            // entao nao existir e 404, e nao defeito interno.
+            if (!reminder.has_value())
+            {
+                throw shared::NotFoundError("Lembrete não encontrado.");
+            }
+
+            set_reminder_response(response, *reminder, 200);
+        });
 
     api.server().Put(
         reminder_by_id,

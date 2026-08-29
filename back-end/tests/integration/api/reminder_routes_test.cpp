@@ -1,10 +1,12 @@
 #include "virtual_planner/api/http/api_server.hpp"
+#include "virtual_planner/api/http/routes/auth_routes.hpp"
 #include "virtual_planner/api/http/routes/reminder_routes.hpp"
 #include "virtual_planner/core/app_config.hpp"
 #include "virtual_planner/interfaces/logger.hpp"
 #include "virtual_planner/persistence/memory/repositories.hpp"
 #include "virtual_planner/persistence/repository_set.hpp"
 
+#include "support/authenticated_client.hpp"
 #include "support/expect.hpp"
 
 #include <nlohmann/json.hpp>
@@ -144,9 +146,16 @@ int main()
     const core::AppConfig config{
         "virtual-planner-reminder-test", core::ExecutionProfile::Test};
     http_api::ApiServer server{config, repositories, nullptr, logger};
+    http_api::register_auth_routes(server);
     http_api::register_reminder_routes(server);
 
     with_running_server(server, [&reminders](httplib::Client& client) {
+        // O gate de sessao recusa 401 toda rota de dominio. Autenticar e o
+        // primeiro passo de qualquer teste de API desde a introducao do login.
+        const auto alice =
+            testing::register_and_login(client, "alice@example.com", "Alice");
+        testing::authenticate_as(client, alice);
+
         const auto empty = get_reminders(
             client, "start_date=2026-08-01&end_date=2026-08-31");
         VP_EXPECT(empty.is_array() && empty.empty(),
@@ -376,6 +385,33 @@ int main()
                          "/api/reminders/" + std::to_string(once_id)),
                      404, "not_found",
                      "excluir novamente deve responder 404");
+
+        // --- GET /api/reminders/:id ------------------------------------
+        //
+        // Leitura de um lembrete so. A listagem expande ocorrencias de um
+        // recorrente; este devolve a regra em si, que e o que a tela de
+        // edicao precisa carregar.
+        const auto single = client.Get(
+            "/api/reminders/" + std::to_string(weekly_id));
+        VP_EXPECT(static_cast<bool>(single), "a busca por ID deve responder");
+        VP_EXPECT(single->status == 200,
+                  "buscar um Reminder existente deve responder 200");
+        VP_EXPECT(single->get_header_value("Content-Type") ==
+                      "application/json",
+                  "a busca por ID deve responder JSON");
+
+        const auto single_body = nlohmann::json::parse(single->body);
+        VP_EXPECT(single_body.at("id") == weekly_id,
+                  "a busca por ID deve devolver o Reminder pedido");
+        VP_EXPECT(single_body.contains("recurrence"),
+                  "a busca por ID devolve a regra, com a recorrência");
+
+        expect_error(client.Get("/api/reminders/999999"),
+                     404, "not_found",
+                     "buscar um Reminder inexistente deve responder 404");
+        expect_error(client.Get("/api/reminders/abc"),
+                     400, "validation_error",
+                     "um ID não numérico deve responder 400");
     });
 
     return 0;

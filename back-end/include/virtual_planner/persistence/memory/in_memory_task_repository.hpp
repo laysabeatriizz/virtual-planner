@@ -20,53 +20,72 @@ namespace virtual_planner::persistence {
 class InMemoryTaskRepository final : public TaskRepository
 {
 public:
-    void save(const domain::Task& task) override
+    void save(const domain::Task& task,
+              std::uint64_t user_id) override
     {
         for (auto& current : tasks_)
         {
-            if (current.id() == task.id())
+            if (current.user_id == user_id && current.task.id() == task.id())
             {
-                current = task;
+                current.task = task;
                 return;
             }
         }
 
-        tasks_.push_back(task);
+        tasks_.push_back(StoredTask{user_id, task});
     }
 
-    std::optional<domain::Task> find_by_id(std::uint64_t id) override
+    std::optional<domain::Task> find_by_id(std::uint64_t id,
+                                           std::uint64_t user_id) override
     {
         for (const auto& task : tasks_)
         {
-            if (task.id() == id)
+            if (task.user_id == user_id && task.task.id() == id)
             {
-                return task;
+                return task.task;
             }
         }
 
         return std::nullopt;
     }
 
-    std::vector<domain::Task> find_all() override
+    std::vector<domain::Task> find_all(std::uint64_t user_id) override
     {
-        return tasks_;
+        std::vector<domain::Task> result;
+
+        for (const auto& stored : tasks_)
+        {
+            if (stored.user_id == user_id)
+            {
+                result.push_back(stored.task);
+            }
+        }
+
+        return result;
     }
 
-    void remove(std::uint64_t id) override
+    void remove(std::uint64_t id,
+                std::uint64_t user_id) override
     {
         tasks_.erase(
             std::remove_if(
                 tasks_.begin(),
                 tasks_.end(),
-                [id](const domain::Task& task)
+                [id, user_id](const StoredTask& task)
                 {
-                    return task.id() == id;
+                    return task.user_id == user_id && task.task.id() == id;
                 }),
             tasks_.end());
     }
 
 private:
-    std::vector<domain::Task> tasks_;
+    struct StoredTask
+    {
+        std::uint64_t user_id;
+        domain::Task task;
+    };
+
+    std::vector<StoredTask> tasks_;
 };
 
 } // namespace virtual_planner::persistence

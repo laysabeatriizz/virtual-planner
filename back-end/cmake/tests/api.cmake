@@ -8,6 +8,9 @@ target_link_libraries(shared_json_test PRIVATE virtual_planner_json)
 virtual_planner_add_test(goal_json_test unit/api/json/goal_json_test.cpp)
 target_link_libraries(goal_json_test PRIVATE virtual_planner_json)
 
+virtual_planner_add_test(reminder_json_test unit/api/json/reminder_json_test.cpp)
+target_link_libraries(reminder_json_test PRIVATE virtual_planner_json)
+
 # O teste do servidor sobe uma porta de verdade, entao so existe com a
 # camada HTTP compilada.
 if(VIRTUAL_PLANNER_WITH_HTTP)

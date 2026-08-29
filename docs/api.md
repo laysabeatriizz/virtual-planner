@@ -471,6 +471,44 @@ Remove uma meta pelo identificador.
 Uma remoção bem-sucedida responde **204** sem corpo. Um identificador
 inexistente responde **404** com `code="not_found"`.
 
+## Reminder
+
+A representação JSON de `Reminder` reutiliza as conversões compartilhadas de
+`Category`, `Date`, `TimeSlot`, `ReminderType` e `ReminderRecurrence` definidas
+em P-29.0. Os sete campos são obrigatórios.
+
+Exemplo:
+
+```json
+{
+  "id": 42,
+  "description": "Revisar paradigmas de C++",
+  "category": "Study",
+  "date": "2026-08-28",
+  "time_slot": {
+    "start": 540,
+    "end": 600
+  },
+  "type": "Study",
+  "recurrence": "Weekly"
+}
+```
+
+| Campo | Tipo JSON | Significado |
+|---|---|---|
+| `id` | inteiro sem sinal | Identificador do lembrete |
+| `description` | string | Descrição do lembrete |
+| `category` | string | `Category`, usando a representação compartilhada |
+| `date` | string | Data do lembrete ou data-âncora da recorrência, em ISO 8601 `YYYY-MM-DD` |
+| `time_slot` | objeto | `TimeSlot`, com `start` e `end` em minutos desde a meia-noite |
+| `type` | string | `ReminderType`, usando a representação compartilhada |
+| `recurrence` | string | `ReminderRecurrence`, usando a representação compartilhada |
+
+`type` e `recurrence` são sempre explícitos. Um lembrete único usa
+`"recurrence": "Once"`; um lembrete recorrente usa `"Daily"`, `"Weekly"` ou
+`"Monthly"`. A recorrência não é inferida de outro campo, e `date` funciona
+como data-âncora da regra recorrente.
+
 ## Exemplo de uso em uma entidade
 
 Este é o padrão que P-29.1 a P-29.4 devem seguir:
